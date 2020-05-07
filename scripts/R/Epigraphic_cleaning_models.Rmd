@@ -276,7 +276,7 @@ dubious_dot_subscript <- c("\u{0323}", "")
 * Example after cleaning: ```Φιλήτη  θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς   ἀγὼν```
 
 ```{r}
-interpunction_symbols <- c("[,|\\.|․|·|!|\\-|—|#|%|\\^|&|\\*|\\/|~|:|;]", " ")
+interpunction_symbols <- c("[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&|\\*|\\/|~|:|;]", " ")
 ```
 
 ### 3.11. Superscript numbers
@@ -299,7 +299,7 @@ superscript_numbers <- c("[⁰¹²³⁴⁵⁶⁷⁸⁹]+", "")
 * Example after cleaning: ```ἀγαθῆι   τύχηι```
 
 ```{r}
-epigraphic_symbols <-c ("[❦|∙|𐆖]", "")
+epigraphic_symbols <-c ("[❦|∙|𐆖|⏑|⏓|⏕]", "")
 ```
 ### 3.13. Uncertainty symbols
 **Aim:** All instances of th elisted symbols marking uncertainty (?) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
@@ -327,7 +327,7 @@ end_line <- c("\\n", " ")
 * Example after cleaning: ```ἀγαθῆι τύχηι.```
 
 ```{r}
-extra_blank <- c("  ", " ")
+extra_blank <- c("[ ]+", " ")
 ```
 
 ### 3.16. Multi-whitespace

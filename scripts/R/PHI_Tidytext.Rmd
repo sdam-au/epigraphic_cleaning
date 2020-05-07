@@ -1,0 +1,39 @@
+---
+title: "Tidy text for PHI Greek Inscriptions"
+author: "Petra Hermankova"
+date: "07/05/2020"
+output: html_document
+---
+*Initial setup*
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(stringr)
+```
+
+## Loading data
+
+```{r, echo=FALSE, tidy=TRUE}
+text <- read_csv("../../outputs/PHI_IGBulg-I_clean_text.csv")
+head(text)
+```
+# Tidy text analysis of the `clean_text_interpretive` column
+
+## Additional cleaning with stopword list
+
+
+
+
+## Tokenizing
+
+```{r}
+clean_interpretive_tokenized <- text %>% 
+  unnest_tokens(word, clean_text_interpretive, token = stringr::str_split, pattern = " ") %>% 
+  drop_na(word) %>%
+  count(word, sort = TRUE)
+clean_interpretive_tokenized$word[1:1000]
+```
+
+

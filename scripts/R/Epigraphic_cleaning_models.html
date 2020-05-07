@@ -597,7 +597,7 @@ library(dplyr)</code></pre>
 <li>Example before cleaning: <code>Φιλήτη # θεᾷ Μαλοφόρῳ</code> or <code>κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς· /ἀγὼν</code></li>
 <li>Example after cleaning: <code>Φιλήτη  θεᾷ Μαλοφόρῳ</code> or <code>κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς   ἀγὼν</code></li>
 </ul>
-<pre class="r"><code>interpunction_symbols &lt;- c(&quot;[,|\\.|․|·|!|\\-|—|#|%|\\^|&amp;|\\*|\\/|~|:|;]&quot;, &quot; &quot;)</code></pre>
+<pre class="r"><code>interpunction_symbols &lt;- c(&quot;[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&amp;|\\*|\\/|~|:|;]&quot;, &quot; &quot;)</code></pre>
 </div>
 <div id="superscript-numbers" class="section level3">
 <h3>3.11. Superscript numbers</h3>
@@ -616,7 +616,7 @@ library(dplyr)</code></pre>
 <li>Example before cleaning: <code>ἀγαθῆι ❦ τύχηι</code></li>
 <li>Example after cleaning: <code>ἀγαθῆι   τύχηι</code></li>
 </ul>
-<pre class="r"><code>epigraphic_symbols &lt;-c (&quot;[❦|∙|𐆖]&quot;, &quot;&quot;)</code></pre>
+<pre class="r"><code>epigraphic_symbols &lt;-c (&quot;[❦|∙|𐆖|⏑|⏓|⏕]&quot;, &quot;&quot;)</code></pre>
 </div>
 <div id="uncertainty-symbols" class="section level3">
 <h3>3.13. Uncertainty symbols</h3>
@@ -643,7 +643,7 @@ library(dplyr)</code></pre>
 <li>Example before cleaning: <code>ἀγαθῆι   τύχηι.</code></li>
 <li>Example after cleaning: <code>ἀγαθῆι τύχηι.</code></li>
 </ul>
-<pre class="r"><code>extra_blank &lt;- c(&quot;  &quot;, &quot; &quot;)</code></pre>
+<pre class="r"><code>extra_blank &lt;- c(&quot;[ ]+&quot;, &quot; &quot;)</code></pre>
 </div>
 <div id="multi-whitespace" class="section level3">
 <h3>3.16. Multi-whitespace</h3>
