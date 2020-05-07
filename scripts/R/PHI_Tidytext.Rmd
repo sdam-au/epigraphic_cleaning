@@ -5,7 +5,7 @@ date: "07/05/2020"
 output: html_document
 ---
 *Initial setup*
-```{r setup, include=FALSE}
+```{r setup, echo=TRUE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(tidytext)
@@ -15,14 +15,20 @@ library(stringr)
 
 ## Loading data
 
-```{r, echo=FALSE, tidy=TRUE}
+```{r, echo=TRUE, message=FALSE}
 text <- read_csv("../../outputs/PHI_IGBulg-I_clean_text.csv")
 head(text)
 ```
 # Tidy text analysis of the `clean_text_interpretive` column
 
-## Additional cleaning with stopword list
+## Additional cleaning with stopword lists
 
+*Note:* If you would like to create your own stopword list or are interested in how the used stopword list was created and what it contains, see the script [].Rmd.
+
+
+```{r}
+#TBA
+```
 
 
 
@@ -32,8 +38,81 @@ head(text)
 clean_interpretive_tokenized <- text %>% 
   unnest_tokens(word, clean_text_interpretive, token = stringr::str_split, pattern = " ") %>% 
   drop_na(word) %>%
-  count(word, sort = TRUE)
-clean_interpretive_tokenized$word[1:1000]
+  print()
+```
+
+## Counting the most common words
+
+```{r, tidy=TRUE}
+clean_interpretive_tokenized %>% 
+  count(word, sort = TRUE) %>% 
+  filter(n > 10) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  print()
+```
+
+## Plotting the most common words  
+
+```{r, fig.height=6, echo=TRUE}
+clean_interpretive_tokenized %>% 
+  count(word, sort = TRUE) %>% 
+  filter(n > 50) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(word, n)) +
+  geom_col() +
+  ggtitle("Frequency of the most common words in IG Bulg 1") +
+  xlab("Word") +
+  ylab("Number of occurences") +
+  coord_flip() -> freq_words_interpretive
+
+freq_words_interpretive
+```
+
+## Saving the plot
+
+```{r}
+ggsave("PHI_IGBulg1_freq_words.png", plot = freq_words_interpretive, device = "png", path = "../../outputs/", dpi= 300)
+```
+
+## Grouping distribution of most freqent words by region
+
+```{r}
+clean_interpretive_tokenized %>% 
+  count(region, word, sort = TRUE) %>% 
+  group_by(region) %>% 
+  summarise(total = sum(n)) -> clean_interpretive_total_region
+clean_interpretive_total_region
+```
+
+## Plotting the most frequent words by region 
+
+```{r, fig.height=5}
+clean_interpretive_total_region %>% 
+  filter(total > 50) %>% 
+  ggplot(aes(total, region)) +
+  geom_point(aes(col=total), size=3)
+```
+
+## Comparing usage of the word of interest in all regions
+
+```{r}
+clean_interpretive_tokenized %>% 
+  count(word, region, sort = TRUE) %>% 
+  filter(word =="αὐρήλιος") %>% 
+  ggplot(aes(n, region)) +
+  geom_col(show.legend = FALSE)
+```
+
+## Comparing usage of the list of words of interest in all regions
+
+```{r, fig.height=4}
+road_vocabulary<- c("παροδεῖτα", "παροδῖται", "παροδίταις")
+
+clean_interpretive_tokenized %>% 
+  count(word, region, sort = TRUE) %>% 
+  filter(word %in% road_vocabulary) %>% 
+  ggplot(aes(n, region)) +
+  geom_col(show.legend = FALSE)
 ```
 
 
