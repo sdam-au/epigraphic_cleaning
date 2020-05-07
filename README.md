@@ -1,17 +1,15 @@
-# Meaningful title for the repository
-*pick type of repository (TOOL, ETL, ANALYSIS, ADMIN)*
+# Cleaning models for epigraphic texts
+*ETL*
 
 ---
 
 ## Purpose
-[In two to three sentences state the purpose of this repository, ideally tying it to an existing SDAM milestone. E.g., The purpose of this repository is to provide templates for all future SDAM repositories in order to save precious time and maintain high standards and uniformity of our documentation.]
+The main aim of this repository is to clean *any* Greek or Latin epigraphic text of an inscription for further text mining, using R and Regular Expressions.
+Currently the clenaing functions are designed for PHI Greek Inscriptions, but in the near futire cleaning scripts for EDH will be implemented.
 
 ---
 ## Authors
 * Petra Hermankova [![](https://orcid.org/sites/default/files/images/orcid_16x16.png)](https://orcid.org/0000-0002-6349-0540), SDAM project, petra@ancientsocialcomplexity.org
-* [Name], [ORCID], [Institution], [email]
-* [Name], [ORCID], [Institution], [email]
-* [Name], [ORCID], [Institution], [email]
 
 ## License
 CC-BY-SA 4.0, see attached License.md
@@ -29,20 +27,19 @@ CC-BY-SA 4.0, see attached License.md
 [Describe the provenance of data used in the scripts contained and clarify how it is harvested and what other prerequisites are required to get the scripts working. In case of pure tool attribute any reused scripts to source, etc., license and specify any prerequisites or technical requirements.]
 
 ### Data
-Anything else on data metadata and data used. Link to data repository or explanatory article. 
+1) The cleaning scripts are designed to work with the structure of PHI Greek Searchable Inscriptions
+
 
 ### Software
-1. Software X, minimum version 123
-1. Software Y, version 456
+1. R, v.4.0
+2. RStudio (optional)
+3. Some knowledge of Regular Expressions
 
 ### Registered account
-1. CompanyA
-1. CompanyB
+1. NA
 
 ### Hardware
-1. Multiple-screen
-1. Mouse
-1. Coffee
+1. Computer with large enough RAM
 
 ---
 ## Installation
@@ -50,10 +47,7 @@ Anything else on data metadata and data used. Link to data repository or explana
 
 ---
 ## Instructions 
-[Describe first steps, how to use the current repository by a typical user - the digital historian with limited technical skills]
-1. First, do ...
-1. Second, do ...
-1. Third, go to ...
+See ```scripts/R/Epigraphic_cleaning_models.Rmd``` script with instructions.
 
 
 ## Screenshots
