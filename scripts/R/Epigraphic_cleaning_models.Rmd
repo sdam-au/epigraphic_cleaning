@@ -528,9 +528,12 @@ Create a new directory ```outputs``` in the root folder if it does not exist.
 clean_text <- text %>% 
   mutate(clean_text_conservative = cleaning_conservative(text$data)) %>% 
   mutate(clean_text_interpretive = cleaning_interpretive(text$data))
+```
 
-d# ir.create("../../outputs")
-write_csv(clean_text, path = "../../Poutputs/HI_IGBulg-I_clean_text.csv")
+
+```{r}
+# dir.create("../../outputs")
+write_csv(clean_text, path = "../../outputs/PHI_IGBulg-I_clean_text.csv")
 ```
 
 

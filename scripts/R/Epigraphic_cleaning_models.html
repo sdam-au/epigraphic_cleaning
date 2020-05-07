@@ -692,7 +692,7 @@ library(dplyr)</code></pre>
 <p>When we have established the individual buidling blocks, we can put them together in the right sequence and build a cleaning function in R for both models.</p>
 <div id="loading-data" class="section level3">
 <h3>Loading data</h3>
-<p>First, we need to load the provided test dataset <code>PHI_IGBulg-I.csv</code> located in the <code>test_data</code> folder and create an object <code>dirtytext</code> contain the text to be cleaned.</p>
+<p>First, we need to load the provided test dataset <code>PHI_IGBulg-I.csv</code> located in the <code>test_data</code> folder and create an object <code>dirtytext</code> contain the text to be cleaned. Use <code>getwd()</code> function to make sure you are in the right working directory, so the <code>read_csv</code> code works for you. If not, adjust the path.</p>
 <pre class="r"><code>getwd()</code></pre>
 <pre><code>## [1] &quot;/home/petra/Github/epigraphic_cleaning/scripts/R&quot;</code></pre>
 <pre class="r"><code>text &lt;- read_csv(&quot;../../test_data/PHI_IGBulg-I.csv&quot;)
@@ -730,7 +730,8 @@ dirtytext &lt;- as.data.frame(select(text, hdr2, data))</code></pre>
 }</code></pre>
 <div id="example-of-conservative-cleaning" class="section level4">
 <h4>Example of conservative cleaning:</h4>
-<p>O<em>riginal text of an inscription IGBulg I² 15(3) before cleaning: </em> [— — — — — — — — — — — — — — —]</p>
+<p><em>Original text of an inscription IGBulg I² 15(3) before cleaning:</em></p>
+<p>[— — — — — — — — — — — — — — —]</p>
 <p>[— — —δόντα καὶ διανομ]ὰ̣ς̣ τ̣ῇ̣ τ̣ε̣ κ̣ρ̣α̣-</p>
 <p>[τί]σ̣τ̣ῃ βουλῇ καὶ ἀγορανόμοις καὶ</p>
 <p>[ταῖ]ς ἑπτὰ φυλαῖς καὶ τοῖς ὑμνοῦσι</p>
@@ -794,6 +795,15 @@ example_interpretive[30,]</code></pre>
 </div>
 </div>
 </div>
+</div>
+<div id="saving-both-versions-of-the-cleaned-text-in-a-csv" class="section level1">
+<h1>Saving both versions of the cleaned text in a CSV</h1>
+<p>Save the output of <code>cleaning_conservative</code> and <code>cleaning_interpretive</code> function together with the original contents of the dataset. Create a new directory <code>outputs</code> in the root folder if it does not exist.</p>
+<pre class="r"><code>clean_text &lt;- text %&gt;% 
+  mutate(clean_text_conservative = cleaning_conservative(text$data)) %&gt;% 
+  mutate(clean_text_interpretive = cleaning_interpretive(text$data))</code></pre>
+<pre class="r"><code># dir.create(&quot;../../outputs&quot;)
+write_csv(clean_text, path = &quot;../../outputs/PHI_IGBulg-I_clean_text.csv&quot;)</code></pre>
 </div>
 
 
