@@ -1,0 +1,53 @@
+---
+title: "Tidy text for EDH Inscriptions"
+author: "Petra Hermankova"
+date: "07/05/2020"
+output: html_document
+---
+
+
+*Initial setup*
+```{r setup, echo=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::install_github("mplex/cedhar", subdir="pkg/sdam")
+install.packages("rjson")
+install.packages("tidyverse")
+install.packages("getPass")
+
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(stringr)
+library(sdam)
+library(rjson)
+library(tidyverse)
+library(getPass)
+```
+
+# Connect to Sciencedata.dk to access the dataset
+1. Input your sciencedata.dk username - type directly into the RStudio console
+```{r}
+user <- readline("your sciencedata username: ")
+```
+
+2. Make the request (you will be asked for password in a new pop-up window)
+```{r}
+resp = request("EDH_utf8.json", path="/sharingin/648597@au.dk/SDAM_root/SDAM_data/EDH/", method="GET", cred=c(user, getPass("your sciencedata password: ")))
+```
+
+3. Make a list from the request and display forst six records
+```{r, tidy=TRUE}
+list_json <- fromJSON(resp)
+EDH_tibble = as_tibble(list_json)
+head(EDH_tibble)
+```
+
+4. Make a subset for testing
+```{r}
+Thracia <- EDH_tibble %>% 
+  filter(province_label=="Thracia"|province_label=="Thracia?")
+Thracia
+```
+
+
+

@@ -371,7 +371,7 @@ summary {
 
 
 <p><em>Setting up the environment</em></p>
-<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, error=TRUE)
 library(tidyverse)
 library(dplyr)</code></pre>
 <div id="cleaning-epigraphic-text-for-tidy-text-mining" class="section level1">
@@ -540,7 +540,7 @@ library(dplyr)</code></pre>
 <p><strong>!!!</strong> The <code>editorial_notes</code> script should run before the <code>expanded_abbreviations_conservative</code> and <code>expanded_abbreviations_interpretive</code> scripts, otherwise the Regex pattern would not clean the text properly.</p>
 <ul>
 <li>Example before cleaning: <code>Ἥρωι (vel sim.) Καλλισθένης</code></li>
-<li>Example after cleaning: `<code>Ἥρωι   Καλλισθένης</code></li>
+<li>Example after cleaning: ``Ἥρωι Καλλισθένης```</li>
 </ul>
 <pre class="r"><code>editorial_notes &lt;-c(&quot;\\(vel sim.\\)&quot;, &quot; &quot;)</code></pre>
 </div>
@@ -597,7 +597,7 @@ library(dplyr)</code></pre>
 <li>Example before cleaning: <code>Φιλήτη # θεᾷ Μαλοφόρῳ</code> or <code>κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς· /ἀγὼν</code></li>
 <li>Example after cleaning: <code>Φιλήτη  θεᾷ Μαλοφόρῳ</code> or <code>κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς   ἀγὼν</code></li>
 </ul>
-<pre class="r"><code>interpunction_symbols &lt;- c(&quot;[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&amp;|\\*|\\/|~|:|;]&quot;, &quot; &quot;)</code></pre>
+<pre class="r"><code>interpunction_symbols &lt;- c(&quot;[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&amp;|\\*|\\/|~|:|;|@]&quot;, &quot; &quot;)</code></pre>
 </div>
 <div id="superscript-numbers" class="section level3">
 <h3>3.11. Superscript numbers</h3>
@@ -655,15 +655,15 @@ library(dplyr)</code></pre>
 </ul>
 <pre class="r"><code>multi_whitespace &lt;- c(&quot;\\s+&quot;, &quot; &quot;)</code></pre>
 </div>
-<div id="whitespace-on-the-end-of-line" class="section level3">
-<h3>3.17. Whitespace on the end of line</h3>
-<p><strong>Aim:</strong> All instances of whitespace &quot; &quot; at the end of the line will be eliminated (substituted with &quot;&quot;).</p>
-<p><strong>!!!</strong> The <code>whitespace_endline</code> should run as the last cleaning block to ensure all redundant white spaces at the end of the line are cleaned from the text.</p>
+<div id="trailing-and-leading-whitespace" class="section level3">
+<h3>3.17. Trailing and leading whitespace</h3>
+<p><strong>Aim:</strong> All instances of whitespace &quot; &quot; at the beginning and end of the line will be eliminated (substituted with &quot;&quot;).</p>
+<p><strong>!!!</strong> The <code>whitespace_endline</code> should run as the last cleaning block to ensure all redundant white spaces are cleaned from the text.</p>
 <ul>
 <li>Example before cleaning: <code>χαῖρε</code></li>
 <li>Example after cleaning: <code>χαῖρε</code></li>
 </ul>
-<pre class="r"><code>whitespace_endline &lt;- c(&quot;\\s$&quot;, &quot;&quot;)</code></pre>
+<pre class="r"><code>whitespace_endline &lt;- c(&quot;(^\\s|\\s$)&quot;, &quot;&quot;)</code></pre>
 </div>
 <div id="editorial-comments-in-latin-alphabet" class="section level3">
 <h3>3.18. Editorial comments in Latin alphabet</h3>
@@ -684,12 +684,26 @@ library(dplyr)</code></pre>
 <li>Example after cleaning: <code>ἡ γυνὴ αὐτοῦ ΦιλΙ καὶ</code></li>
 </ul>
 <pre class="r"><code>arabic_numerals &lt;- c(&quot;[0-9]+&quot;, &quot;&quot;)</code></pre>
+</div>
+<div id="unclosed-brackets" class="section level3">
+<h3>3.20 Unclosed brackets</h3>
+<p><strong>Aim:</strong> All instances of unclosed brackets will be eliminated (substituted with &quot;&quot;).</p>
+<p><strong>!!!</strong> Use the <code>unclosed_brackets</code> script immediately before <code>multi_whitespace</code> and <code>whitespace_endline</code> scripts, otherwise the Regex pattern would not clean the text properly.</p>
+<ul>
+<li>Example before cleaning: <code>ummio isenna Xv [</code></li>
+<li>Example after cleaning: <code>ummio isenna Xv</code></li>
+</ul>
+<pre class="r"><code>unclosed_brackets &lt;- c(&quot;[\\[|\\{|\\(|\\)|\\}|\\]]&quot;, &quot;&quot;)</code></pre>
 <hr />
 </div>
 </div>
-<div id="building-cleaning-functions" class="section level2">
-<h2>Building cleaning functions</h2>
-<p>When we have established the individual buidling blocks, we can put them together in the right sequence and build a cleaning function in R for both models.</p>
+</div>
+<div id="building-cleaning-functions-for-specific-datasets" class="section level1">
+<h1>Building cleaning functions for specific datasets</h1>
+<p>When we have established the individual buidling blocks, we can put them together in the right sequence and build a cleaning function in R for conservative and interpretive models.</p>
+<div id="phi-greek-inscriptions-dataset" class="section level2">
+<h2>PHI Greek Inscriptions dataset</h2>
+<p>Source: <a href="https://epigraphy.packhum.org/" class="uri">https://epigraphy.packhum.org/</a></p>
 <div id="loading-data" class="section level3">
 <h3>Loading data</h3>
 <p>First, we need to load the provided test dataset <code>PHI_IGBulg-I.csv</code> located in the <code>test_data</code> folder and create an object <code>dirtytext</code> contain the text to be cleaned. Use <code>getwd()</code> function to make sure you are in the right working directory, so the <code>read_csv</code> code works for you. If not, adjust the path.</p>
@@ -740,10 +754,10 @@ dirtytext &lt;- as.data.frame(select(text, hdr2, data))</code></pre>
 <p>{[πα]ρ̣ε̣}π̣ιδη̣μήσα̣σιν {²⁶παρεπιδημήσασιν}²⁶ τῆ̣ς̣ Π̣ε̣ντ[α]-</p>
 <p>[πόλεως βουλευταῖς — — — — —]</p>
 <p>[— — — — — — — — — — — — —]</p>
-<p>Output of the <code>cleanining_conservative</code> function:</p>
+<p>Output of the <code>cleaning_conservative</code> function:</p>
 <pre class="r"><code>example_conservative &lt;- as.data.frame(cleaning_conservative(dirtytext$data))
 example_conservative[30,]</code></pre>
-<pre><code>## [1] &quot; ὰς τῇ τε κραστῃ βουλῇ καὶ ἀγορανόμοις καὶ ς ἑπτὰ φυλαῖς καὶ τοῖς ὑμνοῦσι τοὺς Σεβαστοὺς καὶ ἀγοραίοις ἰατροῖς παιδευταῖς καὶ τοῖς παρερεπιδημήσασιν τῆς Πεντ&quot;</code></pre>
+<pre><code>## [1] &quot;ὰς τῇ τε κραστῃ βουλῇ καὶ ἀγορανόμοις καὶ ς ἑπτὰ φυλαῖς καὶ τοῖς ὑμνοῦσι τοὺς Σεβαστοὺς καὶ ἀγοραίοις ἰατροῖς παιδευταῖς καὶ τοῖς παρερεπιδημήσασιν τῆς Πεντ&quot;</code></pre>
 </div>
 </div>
 <div id="interpretive-model" class="section level3">
@@ -791,19 +805,169 @@ example_conservative[30,]</code></pre>
 <p>Output of the <code>cleanining_interpretive</code> function:</p>
 <pre class="r"><code>example_interpretive &lt;- as.data.frame(cleaning_interpretive(dirtytext$data))
 example_interpretive[30,]</code></pre>
-<pre><code>## [1] &quot; δόντα καὶ διανομὰς τῇ τε κρατίστῃ βουλῇ καὶ ἀγορανόμοις καὶ ταῖς ἑπτὰ φυλαῖς καὶ τοῖς ὑμνοῦσι τοὺς Σεβαστοὺς καὶ ἀγοραίοις ἰατροῖς παιδευταῖς καὶ τοῖς παρεπιδημήσασιν τῆς Πενταπόλεως βουλευταῖς&quot;</code></pre>
+<pre><code>## [1] &quot;δόντα καὶ διανομὰς τῇ τε κρατίστῃ βουλῇ καὶ ἀγορανόμοις καὶ ταῖς ἑπτὰ φυλαῖς καὶ τοῖς ὑμνοῦσι τοὺς Σεβαστοὺς καὶ ἀγοραίοις ἰατροῖς παιδευταῖς καὶ τοῖς παρεπιδημήσασιν τῆς Πενταπόλεως βουλευταῖς&quot;</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div id="saving-both-versions-of-the-cleaned-text-in-a-csv" class="section level1">
-<h1>Saving both versions of the cleaned text in a CSV</h1>
+<div id="saving-both-versions-of-the-cleaned-text-in-a-csv" class="section level3">
+<h3>Saving both versions of the cleaned text in a CSV</h3>
 <p>Save the output of <code>cleaning_conservative</code> and <code>cleaning_interpretive</code> function together with the original contents of the dataset. Create a new directory <code>outputs</code> in the root folder if it does not exist.</p>
-<pre class="r"><code>clean_text &lt;- text %&gt;% 
-  mutate(clean_text_conservative = cleaning_conservative(text$data)) %&gt;% 
+<pre class="r"><code>clean_text &lt;- text %&gt;%
+  mutate(clean_text_conservative = cleaning_conservative(text$data)) %&gt;%
   mutate(clean_text_interpretive = cleaning_interpretive(text$data))</code></pre>
 <pre class="r"><code># dir.create(&quot;../../outputs&quot;)
 write_csv(clean_text, path = &quot;../../outputs/PHI_IGBulg-I_clean_text.csv&quot;)</code></pre>
+</div>
+</div>
+<div id="edh-inscriptions-dataset" class="section level2">
+<h2>EDH Inscriptions dataset</h2>
+<p>Source: <a href="https://edh-www.adw.uni-heidelberg.de/" class="uri">https://edh-www.adw.uni-heidelberg.de/</a></p>
+<div id="loading-data-1" class="section level3">
+<h3>Loading data</h3>
+<p>First, we need to install several more packages and load the libraries in order to connect to Sciencedata.dk and access the dataset.</p>
+<pre class="r"><code>devtools::install_github(&quot;mplex/cedhar&quot;, subdir=&quot;pkg/sdam&quot;)
+#install.packages(&quot;rjson&quot;)
+#install.packages(&quot;tidyverse&quot;)
+#install.packages(&quot;getPass&quot;)
+#install.packages(&quot;formatR&quot;)
+
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(stringr)
+library(sdam)
+library(rjson)
+library(tidyverse)
+library(getPass)
+library(formatR)</code></pre>
+<ol style="list-style-type: decimal">
+<li>Input your sciencedata.dk username - type directly into the RStudio console</li>
+</ol>
+<pre class="r"><code>user &lt;- readline(&quot;your sciencedata username: &quot;)</code></pre>
+<pre><code>## your sciencedata username:</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Make the request (you will be asked for password in a new pop-up window)</li>
+</ol>
+<pre class="r"><code>resp = request(&quot;EDH_utf8.json&quot;, path=&quot;/sharingin/648597@au.dk/SDAM_root/SDAM_data/EDH/&quot;, method=&quot;GET&quot;, cred=c(user, getPass(&quot;your sciencedata password: &quot;)))</code></pre>
+<pre><code>## Please enter password in TK window (Alt+Tab)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Make a list from the request and display the first six records (head)</li>
+</ol>
+<pre class="r"><code>list_json &lt;- fromJSON(resp)</code></pre>
+<pre><code>## Error in fromJSON(resp): unexpected character '&lt;'</code></pre>
+<pre class="r"><code>EDH_tibble = as_tibble(list_json)</code></pre>
+<pre><code>## Error in as_tibble(list_json): object 'list_json' not found</code></pre>
+<pre class="r"><code>head(EDH_tibble)</code></pre>
+<pre><code>## Error in head(EDH_tibble): object 'EDH_tibble' not found</code></pre>
+</div>
+<div id="conservative-model-1" class="section level3">
+<h3>Conservative model</h3>
+<p><em>Aim:</em> to have a clean text that is as close to the original inscription as preserved on the medium - in case of the EDH dataset column <code>diplomatic_text</code> should be similar to the output of the <code>conservative_cleaning</code> model.</p>
+<p>Since the dataset is mostly in Latin, I did not use the following cleaning scripts: <code>vacat</code>, <code>editorial_notes</code>, <code>editorial_comments_latin</code> since they would eliminate some parts of the text that should not be eliminated. I am not using the <code>suppresion_superscripts_conservative</code> script beacuse the structure of the EDH dataset does not contain curly braces followed by superscript numbers. The script <code>unclosed_brackets</code> has been added since EDH dataset contains a lot of unclosed brackets of all kinds.</p>
+<pre class="r"><code>cleaning_conservative_edh &lt;- function(epigraphic_dataset){
+  clean_text &lt;- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
+  clean_text &lt;- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=expanded_abbreviations_conservative[1], replacement=expanded_abbreviations_conservative[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=suppresion_conservative[1], replacement=suppresion_conservative[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=restoration_conservative[1], replacement=restoration_conservative[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=substitution_conservative[1], replacement=substitution_conservative[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=new_line[1], replacement=new_line[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=split_word_multiline[1], replacement=split_word_multiline[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=erasure_empty[1], replacement=erasure_empty[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=erasure_new_text[1], replacement=erasure_new_text[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=interpunction_symbols[1], replacement=interpunction_symbols[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=superscript_numbers[1], replacement=superscript_numbers[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=epigraphic_symbols[1], replacement=epigraphic_symbols[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=uncertainty_symbols[1], replacement=uncertainty_symbols[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=uncertainty_symbols[1], replacement=uncertainty_symbols[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=end_line[1], replacement=end_line[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=extra_blank[1], replacement=extra_blank[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=arabic_numerals[1], replacement=arabic_numerals[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=unclosed_brackets[1], replacement=unclosed_brackets[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=multi_whitespace[1], replacement=multi_whitespace[2], x=clean_text, perl=TRUE)
+  clean_text &lt;- gsub(pattern=whitespace_endline[1], replacement=whitespace_endline[2], x=clean_text, perl=TRUE)
+  return(clean_text)
+}</code></pre>
+<div id="example-of-conservative-cleaning-1" class="section level4">
+<h4>Example of conservative cleaning:</h4>
+<p><code>Transcription</code> column of the first five inscriptions before cleaning:</p>
+<pre class="r"><code>print(EDH_tibble$transcription[1:5])</code></pre>
+<pre><code>## Error in print(EDH_tibble$transcription[1:5]): object 'EDH_tibble' not found</code></pre>
+<p><code>Diplomatic_text</code> column of the first five inscriptions (for comparison with the cleaning output):</p>
+<pre class="r"><code>print(EDH_tibble$diplomatic_text[1:5])</code></pre>
+<pre><code>## Error in print(EDH_tibble$diplomatic_text[1:5]): object 'EDH_tibble' not found</code></pre>
+<p>Output of the <code>cleaning_conservative_edh</code> function:</p>
+<pre class="r"><code>example_edh &lt;- as.data.frame(cleaning_conservative_edh(EDH_tibble$transcription))</code></pre>
+<pre><code>## Error in gsub(pattern = dubious_dot_subscript[1], replacement = dubious_dot_subscript[2], : object 'EDH_tibble' not found</code></pre>
+<pre class="r"><code>example_edh[1:5,]</code></pre>
+<pre><code>## Error in eval(expr, envir, enclos): object 'example_edh' not found</code></pre>
+</div>
+</div>
+<div id="interpretive-model-1" class="section level3">
+<h3>Interpretive model</h3>
+<p><em>Aim:</em> to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).</p>
+<p>Since the dataset is mostly in Latin, I did not use the following cleaning scripts: <code>vacat</code>, <code>editorial_notes</code>, <code>editorial_comments_latin</code> since they would eliminate some parts of the text that should not be eliminated. I am not using the <code>suppresion_superscripts_interpretive</code> script beacuse the structure of the EDH dataset does not contain curly braces followed by superscript numbers. The script <code>unclosed_brackets</code> has been added since EDH dataset contains a lot of unclosed brackets of all kinds.</p>
+<p>EDH has provided their own version of clean text in the column <code>text_cleaned</code> but did not provide any cleaning script or steps leading to the current state of <code>text_cleaned</code>. As a second step I will compare the output of the <code>interpretive_cleaning</code> model with the <code>text_cleaned</code> version to see who has produced better text for text mining.</p>
+<pre class="r"><code>cleaning_interpretive_edh &lt;- function(epigraphic_dataset){
+   clean_text &lt;- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
+   clean_text &lt;- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
+  # clean_text &lt;- gsub(pattern=vacat[1], replacement=vacat[2], x=clean_text, perl=TRUE)
+  # clean_text &lt;- gsub(pattern=editorial_notes[1], replacement=editorial_notes[2], x=clean_text, perl=TRUE)
+  # clean_text &lt;- gsub(pattern=editorial_comments_latin[1], replacement=editorial_comments_latin[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=expanded_abbreviations_interpretive[1], replacement=expanded_abbreviations_interpretive[2], x=clean_text, perl=TRUE)
+ # clean_text &lt;- gsub(pattern=suppresion_superscripts_interpretive[1], replacement=suppresion_superscripts_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=suppresion_keep_interpretive[1], replacement=suppresion_keep_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=restoration_interpretive[1], replacement=restoration_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=substitution_interpretive[1], replacement=substitution_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=new_line[1], replacement=new_line[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=split_word_multiline[1], replacement=split_word_multiline[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=erasure_empty[1], replacement=erasure_empty[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=erasure_new_text[1], replacement=erasure_new_text[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=interpunction_symbols[1], replacement=interpunction_symbols[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=superscript_numbers[1], replacement=superscript_numbers[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=epigraphic_symbols[1], replacement=epigraphic_symbols[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=uncertainty_symbols[1], replacement=uncertainty_symbols[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=end_line[1], replacement=end_line[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=extra_blank[1], replacement=extra_blank[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=arabic_numerals[1], replacement=arabic_numerals[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=multi_whitespace[1], replacement=multi_whitespace[2], x=clean_text, perl=TRUE)
+   clean_text &lt;- gsub(pattern=whitespace_endline[1], replacement=whitespace_endline[2], x=clean_text, perl=TRUE)
+      return(clean_text)
+}</code></pre>
+<p><code>Transcription</code> column of the first five inscriptions before cleaning:</p>
+<pre class="r"><code>print(EDH_tibble$transcription[1:5])</code></pre>
+<pre><code>## Error in print(EDH_tibble$transcription[1:5]): object 'EDH_tibble' not found</code></pre>
+<p><code>Text_cleaned</code> column, provided by EDH as a clean version of the text, for comparison with the output of the <code>cleaning_intepretive_edh</code> function:</p>
+<pre class="r"><code>print(EDH_tibble$text_cleaned[1:5])</code></pre>
+<pre><code>## Error in print(EDH_tibble$text_cleaned[1:5]): object 'EDH_tibble' not found</code></pre>
+<p>Output of the <code>cleaning_interpretive_edh</code> function:</p>
+<pre class="r"><code>example_edh2 &lt;- as.data.frame(cleaning_interpretive_edh(EDH_tibble$transcription))</code></pre>
+<pre><code>## Error in gsub(pattern = dubious_dot_subscript[1], replacement = dubious_dot_subscript[2], : object 'EDH_tibble' not found</code></pre>
+<pre class="r"><code>example_edh2[1:5,]</code></pre>
+<pre><code>## Error in eval(expr, envir, enclos): object 'example_edh2' not found</code></pre>
+</div>
+<div id="enriching-the-full-dataset-with-conservative-and-interpretive-cleaned-versions-of-the-text" class="section level3">
+<h3>Enriching the full dataset with conservative and interpretive cleaned versions of the text:</h3>
+<pre class="r"><code>EDH_df_clean &lt;- as.data.frame(EDH_tibble) %&gt;%
+  mutate(clean_text_conservative = cleaning_conservative_edh(EDH_tibble$transcription)) %&gt;%
+  mutate(clean_text_interpretive = cleaning_interpretive_edh(EDH_tibble$transcription))  </code></pre>
+<pre><code>## Error in as.data.frame(EDH_tibble): object 'EDH_tibble' not found</code></pre>
+</div>
+<div id="selecting-a-smaller-segment-for-testing" class="section level3">
+<h3>Selecting a smaller segment for testing</h3>
+<pre class="r"><code>Thracia &lt;- EDH_df_clean%&gt;%
+  filter(province_label == &quot;Thracia&quot;|province_label == &quot;Thracia?&quot;)</code></pre>
+<pre><code>## Error in eval(lhs, parent, parent): object 'EDH_df_clean' not found</code></pre>
+<div id="exploring-the-quality-of-text_clean_interpretive" class="section level4">
+<h4>Exploring the quality of text_clean_interpretive</h4>
+<pre class="r"><code>Thracia_json &lt;- toJSON(Thracia)</code></pre>
+<pre><code>## Error in toJSON(Thracia): object 'Thracia' not found</code></pre>
+<pre class="r"><code>write(Thracia_json, &quot;../../outputs/Thracia_cleaned.json&quot;)</code></pre>
+<pre><code>## Error in cat(x, file = file, sep = c(rep.int(sep, ncolumns - 1), &quot;\n&quot;), : object 'Thracia_json' not found</code></pre>
+</div>
+</div>
+</div>
 </div>
 
 
