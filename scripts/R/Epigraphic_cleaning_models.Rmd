@@ -736,29 +736,27 @@ EDH_df_clean <- as.data.frame(EDH_tibble) %>%
   mutate(clean_text_interpretive = cleaning_interpretive_edh(EDH_tibble$transcription))  
 ```
 
-## Saving as JSON
-```{r}
-EDH_clean_json <- toJSON(EDH_df_clean)
-write(EDH_clean_json, "../../outputs/EDH_clean_11_05_2020.json")
-```
-
 -------------------
 ### Selecting a smaller segment for testing
 ```{r}
 Thracia <- EDH_df_clean%>%
-  filter(province_label == "Thracia"|province_label == "Thracia?")
+  filter(province_label == "Thracia"| province_label == "Thracia?")
 ```
 
 #### Comparing new cleaned text, original transcription and the EDH cleaned text for quality of cleaning
 ```{r}
 number <- 37
-print(Thracia$clean_text_interpretive[number])
-print(Thracia$transcription[number])
-print(Thracia$text_cleaned[number])
+print(Thracia$clean_text_interpretive[number]) # output of cleaning_interpretive function
+print(Thracia$transcription[number])           # original text to be cleaned  
+print(Thracia$text_cleaned[number])            # text_cleaned provided by EDH
 ```
 
-
+## Saving as JSON to local space
 ```{r}
-print(Thracia$clean_text_interpretive[1:3])
+EDH_clean_json <- toJSON(EDH_df_clean)
+Thracia_json <- toJSON(Thracia)
+write(Thracia_json, "../../outputs/EDH_Thracia.json")
 ```
+
+## Writing as JSON to Sciencedata.dk - to be implemented
 
