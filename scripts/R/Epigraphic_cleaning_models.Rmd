@@ -3,14 +3,32 @@ title: "Epigraphic cleaning models"
 author: "Petra Hermankova"
 date: "05/05/2020"
 output:
-  html_document: default
   pdf_document: default
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 3
 ---
 *Setting up the environment*
 ```{r setup, echo=TRUE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE, error=TRUE)
+devtools::install_github("mplex/cedhar", subdir="pkg/sdam")
+#install.packages("rjson")
+#install.packages("tidyverse")
+#install.packages("getPass")
+#install.packages("formatR")
+
 library(tidyverse)
+library(tidytext)
 library(dplyr)
+library(stringr)
+library(sdam)
+library(rjson)
+library(getPass)
+library(formatR)
 ```
 
 # Cleaning epigraphic text for tidy text mining
@@ -297,11 +315,20 @@ dubious_dot_subscript <- c("\u{0323}", "")
 ### 3.10. Interpunction symbols
 **Aim:** All instances of listed interpunction symbols (,.!-—#%^&*/~:;) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
 
+!!! If you wish to keep sentence separators, such as dots at the bottom of the line, use ```interpunction_keep_sentences``` or elimininate the sentence separators you want to keep in your text from the cleaning block ```interpunction_keep_sentences```.
+
 * Example before cleaning: ```Φιλήτη # θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς· /ἀγὼν```
 * Example after cleaning: ```Φιλήτη  θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς   ἀγὼν```
 
 ```{r}
 interpunction_symbols <- c("[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&|\\*|~|:|;|@]", " ")
+```
+OR
+
+if you wish to preserve sentence separators, such as dots
+
+```{r}
+interpunction_keep_sentences <- c("[,|․|·|!|\\-|—|–|#|%|\\^|&|\\*|~|:|;|@]", " ")
 ```
 
 ### 3.11. Superscript numbers
@@ -327,13 +354,13 @@ superscript_numbers <- c("[⁰¹²³⁴⁵⁶⁷⁸⁹]+", "")
 epigraphic_symbols <-c ("[❦|∙|𐆖|⏑|⏓|⏕]", "")
 ```
 ### 3.13. Uncertainty symbols
-**Aim:** All instances of th elisted symbols marking uncertainty (?) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
+**Aim:** All instances of th elisted symbols marking uncertainty (?) will be eliminated (substituted with "").
 
 * Example before cleaning: ```χαῖρε?```
 * Example after cleaning: ```χαῖρε ```
 
 ```{r}
-uncertainty_symbols <-c ("[?]", " ")
+uncertainty_symbols <-c ("[?]", "")
 ```
 ### 3.14. End of line
 **Aim:** All instances of end of line symbol (\n) will be replaced by space (substituted with " ").
@@ -441,7 +468,7 @@ dirtytext <- as.data.frame(select(text, hdr2, data))
 *Aim:* to have a clean text that is as close to the original inscription as preserved on the medium.
 
 ```{r}
-cleaning_conservative <- function(epigraphic_dataset){
+cleaning_conservative_phi <- function(epigraphic_dataset){
   clean_text <- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
   clean_text <- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
   clean_text <- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
@@ -494,16 +521,18 @@ cleaning_conservative <- function(epigraphic_dataset){
 
 Output of the ```cleaning_conservative``` function:
 ```{r}
-example_conservative <- as.data.frame(cleaning_conservative(dirtytext$data))
+example_conservative <- as.data.frame(cleaning_conservative_phi(dirtytext$data))
 example_conservative[30,]
 ```
 
 
-### Interpretive model
+### Interpretive model for 'tidytext' analysis based on the analysis of words
 *Aim:* to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).
 
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. No interpunction will be left in the text.
+
 ```{r}
-cleaning_interpretive <- function(epigraphic_dataset){
+cleaning_interpretive_word_phi <- function(epigraphic_dataset){
   clean_text <- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
   clean_text <- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
   clean_text <- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
@@ -533,7 +562,7 @@ cleaning_interpretive <- function(epigraphic_dataset){
 
 ```
 
-#### Example of interpretive cleaning:
+#### Example of interpretive cleaning (word):
 
 *Original text of an inscription IGBulg I² 15(3) before cleaning:*
 
@@ -556,20 +585,101 @@ cleaning_interpretive <- function(epigraphic_dataset){
 
  [— — — — — — — — — — — — —]
 
-Output of the ```cleanining_interpretive``` function:
+Output of the ```cleanining_interpretive_word``` function:
 ```{r}
-example_interpretive <- as.data.frame(cleaning_interpretive(dirtytext$data))
-example_interpretive[30,]
+example_interpretive_word <- as.data.frame(cleaning_interpretive_word_phi(dirtytext$data))
+example_interpretive_word[30,]
 ```
 
-### Saving both versions of the cleaned text in a CSV
 
-Save the output of ```cleaning_conservative``` and ```cleaning_interpretive``` function together with the original contents of the dataset.
+### Interpretive model for 'tidytext' analysis based on the analysis of sentences
+*Aim:* to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).
+
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences```.
+
+```{r}
+cleaning_interpretive_sentence_phi <- function(epigraphic_dataset){
+  clean_text <- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
+  clean_text <- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=vacat[1], replacement=vacat[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=editorial_notes[1], replacement=editorial_notes[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=editorial_comments_latin[1], replacement=editorial_comments_latin[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=expanded_abbreviations_interpretive[1], replacement=expanded_abbreviations_interpretive[2], x=clean_text, perl=TRUE)
+ clean_text <- gsub(pattern=suppresion_superscripts_interpretive[1], replacement=suppresion_superscripts_interpretive[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=suppresion_keep_interpretive[1], replacement=suppresion_keep_interpretive[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=restoration_interpretive[1], replacement=restoration_interpretive[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=substitution_interpretive[1], replacement=substitution_interpretive[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=new_line[1], replacement=new_line[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=split_word_multiline[1], replacement=split_word_multiline[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=erasure_empty[1], replacement=erasure_empty[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=erasure_new_text[1], replacement=erasure_new_text[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=interpunction_keep_sentences[1], replacement=interpunction_keep_sentences[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=superscript_numbers[1], replacement=superscript_numbers[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=epigraphic_symbols[1], replacement=epigraphic_symbols[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=uncertainty_symbols[1], replacement=uncertainty_symbols[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=end_line[1], replacement=end_line[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=extra_blank[1], replacement=extra_blank[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=arabic_numerals[1], replacement=arabic_numerals[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=multi_whitespace[1], replacement=multi_whitespace[2], x=clean_text, perl=TRUE)
+  clean_text <- gsub(pattern=whitespace_endline[1], replacement=whitespace_endline[2], x=clean_text, perl=TRUE)
+      return(clean_text)
+}
+
+```
+
+#### Example of interpretive cleaning (sentence):
+
+*Original text of an inscription IGBulg I² 24(2) before cleaning:*
+
+`ἀγαθῆι τύχηι.`
+
+`Διὶ Δολιχαίῳ`
+
+`Μ(ᾶρκος) Πομπ[έϊ]ο̣ς Λού-`
+
+`κιος βενε̣[φ]ικιά-`
+
+`ρ̣ιος ὑπατικ̣οῦ`
+
+`λεγ(ιῶνος) ∙ αʹ ∙ Ἰταλικῆ̣ς`
+
+`Ἀντωνεινιανῆς,`
+
+`βουλευτὴς Διονυ-`
+
+`σοπολειτῶν, Καλ-`
+
+`λατιανῶν, Μαρ-`
+
+`κιανοπολειτῶν`
+
+`εὐχαριστήριον.`
+
+`ὑπὲρ σωτηρίας τοῦ κυ-`
+
+`ρίου Αὐτοκρά-`
+
+`τορος.`
+
+
+Output of the ```cleanining_interpretive_sentence``` function:
+```{r}
+example_interpretive_sentence <- as.data.frame(cleaning_interpretive_sentence_phi(dirtytext$data))
+example_interpretive_sentence[42,]
+```
+
+
+### Saving all three versions of the cleaned text in a CSV
+
+Save the output of ```cleaning_conservative``` and ```cleaning_interpretive_word``` and ```cleaning_interpretive_sentence``` function together with the original contents of the dataset.
 Create a new directory ```outputs``` in the root folder if it does not exist.
+
 ```{r}
 clean_text <- text %>%
-  mutate(clean_text_conservative = cleaning_conservative(text$data)) %>%
-  mutate(clean_text_interpretive = cleaning_interpretive(text$data))
+  mutate(clean_text_conservative = cleaning_conservative_phi(text$data)) %>%
+  mutate(clean_text_interpretive_word = cleaning_interpretive_word_phi(text$data)) %>% 
+  mutate(clean_text_interpretive_sentence = cleaning_interpretive_sentence_phi(text$data))
 ```
 
 
@@ -584,33 +694,21 @@ Source: https://edh-www.adw.uni-heidelberg.de/
 ### Loading data
 First, we need to install several more packages and load the libraries in order to connect to Sciencedata.dk and access the dataset.
 
-```{r, echo=TRUE, message=FALSE}
-devtools::install_github("mplex/cedhar", subdir="pkg/sdam")
-#install.packages("rjson")
-#install.packages("tidyverse")
-#install.packages("getPass")
-#install.packages("formatR")
-
-library(tidyverse)
-library(tidytext)
-library(dplyr)
-library(stringr)
-library(sdam)
-library(rjson)
-library(tidyverse)
-library(getPass)
-library(formatR)
-```
-
 1. Input your sciencedata.dk username - type directly into the RStudio console
-```{r}
+```{r, echo = FALSE }
 user <- readline("your sciencedata username: ")
 ```
 
 2. Make the request (you will be asked for password in a new pop-up window)
-```{r}
+```{r, echo = FALSE }
 resp = request("EDH_utf8.json", path="/sharingin/648597@au.dk/SDAM_root/SDAM_data/EDH/", method="GET", cred=c(user, getPass("your sciencedata password: ")))
 ```
+
+Sample data for testing (5000 inscriptions only)
+```{r, echo = FALSE }
+resp = request("EDH_sample.json", path="/sharingin/648597@au.dk/SDAM_root/SDAM_data/EDH/", method="GET", cred=c(user, getPass("your sciencedata password: ")))
+```
+
 
 3. Make a list from the request and display the first six records (head)
 ```{r}
@@ -674,15 +772,18 @@ example_edh[1:5,]
 ```
 
 
-### Interpretive model
+
+### Interpretive model for 'tidytext' analysis based on the analysis of words
 *Aim:* to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).
 
 Since the dataset is mostly in Latin, I did not use the following cleaning scripts: `vacat`, `editorial_notes`, `editorial_comments_latin` since they would eliminate some parts of the text that should not be eliminated. I am not using the `suppresion_superscripts_interpretive` script beacuse the structure of the EDH dataset does not contain curly braces followed by superscript numbers. The script `unclosed_brackets` has been added since EDH dataset contains a lot of unclosed brackets of all kinds. Script `substitution_edh_interpretive` was added to clean additional substitution features of the EDH dataset.
 
 EDH has provided their own version of clean text in the column `text_cleaned` but did not provide any cleaning script or steps leading to the current state of `text_cleaned`. As a second step I will compare the output of the `interpretive_cleaning` model with the `text_cleaned` version to see who has produced better text for text mining.
 
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. No interpunction will be left in the text.
+
 ```{r}
-cleaning_interpretive_edh <- function(epigraphic_dataset){
+cleaning_interpretive_word_edh <- function(epigraphic_dataset){
    clean_text <- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
    clean_text <- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
    clean_text <- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
@@ -714,49 +815,111 @@ cleaning_interpretive_edh <- function(epigraphic_dataset){
 print(EDH_tibble$transcription[1:5])
 ```
 
-`Text_cleaned` column, provided by EDH as a clean version of the text, for comparison with the output of the ```cleaning_intepretive_edh``` function:
+`Text_cleaned` column, provided by EDH as a clean version of the text, for comparison with the output of the ```cleaning_intepretive_word_edh``` function:
 
 ```{r}
 print(EDH_tibble$text_cleaned[1:5])
 ```
 
-Output of the ```cleaning_interpretive_edh``` function:
+Output of the ```cleaning_interpretive_word_edh``` function:
 ```{r}
-example_edh2 <- as.data.frame(cleaning_interpretive_edh(EDH_tibble$transcription))
+example_edh2 <- as.data.frame(cleaning_interpretive_word_edh(EDH_tibble$transcription))
 example_edh2[1:5,]
 ```
 
+### Interpretive model for 'tidytext' analysis based on the analysis of sentences
 
+*Aim:* to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).
+
+Since the dataset is mostly in Latin, I did not use the following cleaning scripts: `vacat`, `editorial_notes`, `editorial_comments_latin` since they would eliminate some parts of the text that should not be eliminated. I am not using the `suppresion_superscripts_interpretive` script beacuse the structure of the EDH dataset does not contain curly braces followed by superscript numbers. The script `unclosed_brackets` has been added since EDH dataset contains a lot of unclosed brackets of all kinds. Script `substitution_edh_interpretive` was added to clean additional substitution features of the EDH dataset.
+
+EDH has provided their own version of clean text in the column `text_cleaned` but did not provide any cleaning script or steps leading to the current state of `text_cleaned`. As a second step I will compare the output of the `interpretive_cleaning` model with the `text_cleaned` version to see who has produced better text for text mining.
+
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences```.
+
+```{r}
+cleaning_interpretive_sentence_edh <- function(epigraphic_dataset){
+   clean_text <- gsub(pattern=dubious_dot_subscript[1], replacement=dubious_dot_subscript[2], x=epigraphic_dataset, perl=TRUE)
+   clean_text <- gsub(pattern=lacuna1[1], replacement=lacuna1[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=lacuna2[1], replacement=lacuna2[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=expanded_abbreviations_interpretive[1], replacement=expanded_abbreviations_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=suppresion_keep_interpretive[1], replacement=suppresion_keep_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=restoration_interpretive[1], replacement=restoration_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=substitution_edh_interpretive[1], replacement=substitution_edh_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=substitution_interpretive[1], replacement=substitution_interpretive[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=new_line[1], replacement=new_line[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=split_word_multiline[1], replacement=split_word_multiline[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=erasure_empty[1], replacement=erasure_empty[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=erasure_new_text[1], replacement=erasure_new_text[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=interpunction_keep_sentences[1], replacement=interpunction_keep_sentences[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=superscript_numbers[1], replacement=superscript_numbers[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=epigraphic_symbols[1], replacement=epigraphic_symbols[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=uncertainty_symbols[1], replacement=uncertainty_symbols[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=end_line[1], replacement=end_line[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=extra_blank[1], replacement=extra_blank[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=arabic_numerals[1], replacement=arabic_numerals[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=multi_whitespace[1], replacement=multi_whitespace[2], x=clean_text, perl=TRUE)
+   clean_text <- gsub(pattern=whitespace_endline[1], replacement=whitespace_endline[2], x=clean_text, perl=TRUE)
+      return(clean_text)
+}
+```
+
+`Transcription` column of the first five inscriptions before cleaning:
+
+```{r}
+print(EDH_tibble$transcription[c(2297, 2444, 3026)])
+```
+
+`Text_cleaned` column, provided by EDH as a clean version of the text, for comparison with the output of the ```cleaning_intepretive_word_edh``` function:
+
+```{r}
+print(EDH_tibble$text_cleaned[c(2297, 2444, 3026)])
+```
+
+Output of the ```cleaning_interpretive_sentence_edh``` function:
+```{r}
+example_edh3 <- as.data.frame(cleaning_interpretive_sentence_edh(EDH_tibble$transcription))
+example_edh3[c(2297, 2444, 3026),]
+```
 
 ### Enriching the full dataset with conservative and interpretive cleaned versions of the text:
 
 ```{r}
-EDH_df_clean <- as.data.frame(EDH_tibble) %>%
+EDH_clean <- EDH_tibble %>%
   mutate(clean_text_conservative = cleaning_conservative_edh(EDH_tibble$transcription)) %>%
-  mutate(clean_text_interpretive = cleaning_interpretive_edh(EDH_tibble$transcription))  
+  mutate(clean_text_interpretive_word = cleaning_interpretive_word_edh(EDH_tibble$transcription))  %>% 
+  mutate(clean_text_interpretive_sentence = cleaning_interpretive_sentence_edh(EDH_tibble$transcription)) 
 ```
 
 -------------------
 ### Selecting a smaller segment for testing
 ```{r}
-Thracia <- EDH_df_clean%>%
+Thracia <- EDH_clean%>%
   filter(province_label == "Thracia"| province_label == "Thracia?")
 ```
 
 #### Comparing new cleaned text, original transcription and the EDH cleaned text for quality of cleaning
 ```{r}
-number <- 37
-print(Thracia$clean_text_interpretive[number]) # output of cleaning_interpretive function
-print(Thracia$transcription[number])           # original text to be cleaned  
-print(Thracia$text_cleaned[number])            # text_cleaned provided by EDH
+number <- 3
+print(Thracia$clean_text_interpretive_word[number])     # output of cleaning_interpretive_word function
+print(Thracia$clean_text_interpretive_sentence[number]) # output of cleaning_interpretive_sentence function
+print(Thracia$transcription[number])                    # original text to be cleaned  
+print(Thracia$text_cleaned[number])                     # text_cleaned provided by EDH
 ```
 
 ## Saving as JSON to local space
 ```{r}
-EDH_clean_json <- toJSON(EDH_df_clean)
-Thracia_json <- toJSON(Thracia)
-write(Thracia_json, "../../outputs/EDH_Thracia.json")
+# Thracia_json <- rjson::toJSON(Thracia)
+#write(Thracia_json, "../../outputs/EDH_Thracia.json")
 ```
 
 ## Writing as JSON to Sciencedata.dk - to be implemented
+
+```{r}
+EDH_clean_text_json <- rjson::toJSON(EDH_clean)
+write(EDH_clean_text_json, file="EDH_clean_text_sample.json")
+user <- readline("your sciencedata username: ")
+request("EDH_clean_text_sample.json", path="/sharingout/648597@au.dk/SDAM_root/SDAM_data/EDH/", 
+        method="PUT", cred=c(user, getPass("your sciencedata password: "))) 
+```
 
