@@ -595,7 +595,7 @@ example_interpretive_word[30,]
 ### Interpretive model for 'tidytext' analysis based on the analysis of sentences
 *Aim:* to have a clean text enriched by editorial interpretations and reconstructions of the text (to have as rich text of an inscription as possible).
 
-The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences```.
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences`.
 
 ```{r}
 cleaning_interpretive_sentence_phi <- function(epigraphic_dataset){
@@ -835,7 +835,7 @@ Since the dataset is mostly in Latin, I did not use the following cleaning scrip
 
 EDH has provided their own version of clean text in the column `text_cleaned` but did not provide any cleaning script or steps leading to the current state of `text_cleaned`. As a second step I will compare the output of the `interpretive_cleaning` model with the `text_cleaned` version to see who has produced better text for text mining.
 
-The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences```.
+The output of the function will consist of words separated by one space, so the data is ready for tidytext analysis. Sentence separators will be left in the text, so individual sentences can be analysed separately. For this reason the block `interpunction_symbols` was substituted by `interpunction_keep_sentences`.
 
 ```{r}
 cleaning_interpretive_sentence_edh <- function(epigraphic_dataset){
