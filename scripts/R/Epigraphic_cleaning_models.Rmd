@@ -313,7 +313,7 @@ erasure_new_text <- c("[〚〛]", "")
 dubious_dot_subscript <- c("\u{0323}", "")
 ```
 ### 3.10. Interpunction symbols
-**Aim:** All instances of listed interpunction symbols (,.!-—#%^&*/~:;) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
+**Aim:** All instances of listed interpunction symbols (,.!-—#%^&\*/~:;) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
 
 !!! If you wish to keep sentence separators, such as dots at the bottom of the line, use ```interpunction_keep_sentences``` or elimininate the sentence separators you want to keep in your text from the cleaning block ```interpunction_keep_sentences```.
 
