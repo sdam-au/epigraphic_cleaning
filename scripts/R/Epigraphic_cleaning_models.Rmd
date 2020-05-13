@@ -357,7 +357,7 @@ epigraphic_symbols <-c ("[❦|∙|𐆖|⏑|⏓|⏕]", "")
 **Aim:** All instances of th elisted symbols marking uncertainty (?) will be eliminated (substituted with "").
 
 * Example before cleaning: ```χαῖρε?```
-* Example after cleaning: ```χαῖρε ```
+* Example after cleaning: ```χαῖρε```
 
 ```{r}
 uncertainty_symbols <-c ("[?]", "")
@@ -585,7 +585,7 @@ cleaning_interpretive_word_phi <- function(epigraphic_dataset){
 
  [— — — — — — — — — — — — —]
 
-Output of the ```cleanining_interpretive_word``` function:
+Output of the ```cleaning_interpretive_word``` function:
 ```{r}
 example_interpretive_word <- as.data.frame(cleaning_interpretive_word_phi(dirtytext$data))
 example_interpretive_word[30,]
@@ -663,7 +663,7 @@ cleaning_interpretive_sentence_phi <- function(epigraphic_dataset){
 `τορος.`
 
 
-Output of the ```cleanining_interpretive_sentence``` function:
+Output of the ```cleaning_interpretive_sentence``` function:
 ```{r}
 example_interpretive_sentence <- as.data.frame(cleaning_interpretive_sentence_phi(dirtytext$data))
 example_interpretive_sentence[42,]
@@ -862,15 +862,16 @@ cleaning_interpretive_sentence_edh <- function(epigraphic_dataset){
    clean_text <- gsub(pattern=whitespace_endline[1], replacement=whitespace_endline[2], x=clean_text, perl=TRUE)
       return(clean_text)
 }
+
 ```
 
-`Transcription` column of the first five inscriptions before cleaning:
+`Transcription` column of three inscriptions before cleaning:
 
 ```{r}
 print(EDH_tibble$transcription[c(2297, 2444, 3026)])
 ```
 
-`Text_cleaned` column, provided by EDH as a clean version of the text, for comparison with the output of the ```cleaning_intepretive_word_edh``` function:
+`Text_cleaned` column, provided by EDH as a clean version of the text:
 
 ```{r}
 print(EDH_tibble$text_cleaned[c(2297, 2444, 3026)])
