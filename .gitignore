@@ -1,4 +1,4 @@
 .*
 !/.gitignore
 .Rproj.user
-/outputs/*.json
+*.json
