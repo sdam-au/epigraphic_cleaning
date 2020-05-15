@@ -946,13 +946,13 @@ print(Thracia$text_cleaned[number])                     # text_cleaned provided 
 #write(Thracia_json, "../../outputs/EDH_Thracia.json")
 ```
 
-## Writing as JSON to Sciencedata.dk - to be implemented
-
+## Writing as JSON to Sciencedata.dk 
 ```{r}
 EDH_clean_text_json <- rjson::toJSON(EDH_clean)
 write(EDH_clean_text_json, file="EDH_clean_text_sample.json")
 user <- readline("your sciencedata username: ")
 request("EDH_clean_text_sample.json", path="/sharingout/648597@au.dk/SDAM_root/SDAM_data/EDH/", 
         method="PUT", cred=c(user, getPass("your sciencedata password: "))) 
+file.remove("EDH_clean_text_sample.json")
 ```
 

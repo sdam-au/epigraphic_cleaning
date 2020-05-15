@@ -237,5 +237,6 @@ write(EDH_cleaned_json, file="EDH_cleaned_sample.json")
 user <- readline("your sciencedata username: ")
 request("EDH_cleaned_sample.json", path="/sharingout/648597@au.dk/SDAM_root/SDAM_data/EDH/", 
         method="PUT", cred=c(user, getPass("your sciencedata password: "))) 
+remove("EDH_cleaned_sample.json") # removes local copy
 ```
 
