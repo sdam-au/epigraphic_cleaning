@@ -4,9 +4,6 @@ author: "Petra Hermankova"
 date: "05/05/2020"
 output:
   pdf_document: default
-  word_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     theme: cerulean
     toc: yes
@@ -31,28 +28,34 @@ library(getPass)
 library(formatR)
 ```
 
-# Cleaning epigraphic text for tidy text mining
+# Cleaning epigraphic text for tidy text mining analysis (word and sentence centered)
 
-Before we attempt the cleaning itself, we need to build the cleaning blocks. Once the cleaning blocks are ready we can put them together based on the desired outcome.
+*Aim:* The main purpose of this script is to clean large collections of epigraphic texts all at once in order to create cleaned texts ready for text mining analysis. The output clean texts can be used for a) word centered text mining, also known as the tidytext approach (https://www.tidytextmining.com/) or for b) sentence centered text mining, as part of the Natural Language Processing (https://en.wikipedia.org/wiki/Natural_language_processing).
 
-I have created three categores of building blocks, closely linked with the methodological approach and the purpose of the cleaning process.
+The presented cleaning process is designed as generic, fairly modular and fully customisable. Therefore, it can be with some modification used to any epigraphic corpus. Ample examples are provided to illustrate individual parts of the process, so anyone familiar with _Regular Expressions_ and _basic understanding of R_ can build their own cleaning function or modify the existing ones.
 
-1. Conservative model category
-2. Interpretive model category
-3. Generic cleaning common for both previous categories
+The final output of the cleaning function depends on which of the individual cleaning blocks will be used and in what sequence they will run. Each individual cleaning block represents one pattern occurring repeatedly in the text that can be searched for and modified, depending on the intended outcome. All the cleaning steps are dependent on the characteristics of the original dataset, therefore familiarity with the original dataset prior the cleaning process is recommended. Each dataset can have a different set of symbols and characters to be cleaned, thus, the cleaning blocks should be adjusted accordingly.
+
+I have created three categories of cleaning blocks, closely linked with the methodological approach and the purpose of the cleaning process:
+
+1. `Conservative cleaning model` producing a text as close to the original as possible
+2. `Interpretive cleaning model` producing a text enriched with interpretations of the corpus editor
+3. Generic cleaning of patterns common for both previous categories
 
 _Structure of a cleaning block:_
 
-Each of the cleaning blocks have the same structure. Regular expressions will be used to find and replace the searched term or pattern.
+Each of the cleaning blocks maintains the same structure, using Regular expressions to find and replace the searched term or pattern.
 
 ```regexpatternname <- c("regexpattern", "substitutionpattern")```
 
-## 1. Building blocks for the conservative model
-*The aim of this model is to produce a clean text that is as close to the original text of an inscription as possible.*
+## 1. Cleaning blocks for the conservative model
 
-The cleaned output of the conservative model will be as close to the original text as possible. In most cases it should resemble a diplomatic edition of epigraphic text with spaces between words, lowercase letters, eliminated brackets and non-utf compliant symbols.
+*The aim of this model is to produce a clean text that is as close to the original text of an inscription as possible, without any editorial input.*
+
+The cleaned output of the conservative model will be as close to the original text of an inscription as possible. In most cases it should resemble a _diplomatic edition_ of epigraphic text with spaces between words, lowercase letters, eliminated brackets and non-utf compliant symbols. The interpretive restoration, substitutions or any changes of the text as appear in the dataset, done by the editor of the epigraphic corpus, are eliminated from the conservative model.
 
 ### 1.1. Expanded abbreviations
+
 **Aim:** All expanded abbreaviations that are in the parenthesis () will be eliminated from the clean text (substituted with "").
 
 * Example before cleaning: ```Αὐρ(ήλιος) Οὐαλέριος```
@@ -63,9 +66,10 @@ expanded_abbreviations_conservative <- c("\\([^(]*\\)", "")
 ```
 
 ### 1.2. Suppresion of a text with superscripts
+
 **Aim:** All supressions that are in the curly braces {} followed by one or more superscript digits will be eliminated from the clean text (substituted with "").
 
-**!!!** It is crutial that block `3. Supression of a text` does not precede block `2. Supression of a text with superscripts`, otherwise the Regex pattern would not clean the text properly. This particular pattern is common for the PHI dataset and may  or may not appear in other datasets.
+**!!!** It is crutial that block `suppresion_conservative` does not precede block `suppresion_superscripts_conservative`, otherwise the Regex pattern would not clean the text properly. This particular pattern is common for the PHI dataset and may  or may not appear in other datasets.
 
 * Example before cleaning: ```ἱερεὺς ληφθὶς ὑπὰ {²⁶ὑπὸ}²⁶ τῶν βαρβάρων ```
 * Example after cleaning: ```ἱερεὺς ληφθὶς ὑπὰ  τῶν βαρβάρων ```
@@ -75,9 +79,10 @@ suppresion_superscripts_conservative <- c("{[^}]*}[⁰¹²³⁴⁵⁶⁷⁸⁹]+
 ```
 
 ### 1.3. Suppresion of a text
+
 **Aim:** All curly braces {} will be eliminated from the clean text (substituted with ""), while the contents of the braces will remain in the text.
 
-**!!!** It is crutial that block `3. Supression of a text` does not precede block `2. Supression of a text with superscripts`, otherwise the Regex pattern would not clean the text properly.
+**!!!** It is crutial that block `suppresion_conservative` does not precede block `suppresion_superscripts_conservative`, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```Σεβαστοῦ υἱοῦ {θ̣εοῦ Σεβαστοῦ} τύχης  ```
 * Example after cleaning: ```Σεβαστοῦ υἱοῦ θ̣εοῦ Σεβαστοῦ τύχης  ```
@@ -87,6 +92,7 @@ suppresion_conservative <- c("[\\{*\\}]", "")
 ```
 
 ### 1.4. Restoration
+
 **Aim:** All restoration that are in the square brackets [] will be eliminated from the clean text (substituted with "").
 
 **!!!** Beware that by eliminating the contents of the brackets you may loose some context - use at your own discretion.
@@ -99,9 +105,10 @@ restoration_conservative <- c("\\[[^[]*\\]", "")
 ```
 
 ### 1.5. Substitution
+
 **Aim:** All substitutions that are in the angular brackets <> will be eliminated from the clean text (substituted with "").
 
-**!!!** Beware that by eliminating the contents of the brackets you may loose some context - use at your own discretion.  
+**!!!** Beware that by eliminating the contents of the brackets you may loose some context - use at your own discretion.
 
 * Example before cleaning: ```κωρο<ν Ἀ>ντιόχ<ου> ἡ πατρὶς τειμῆ<ς>```
 * Example after cleaning: ```κωρο ντιόχ ἡ πατρὶς τειμῆς```
@@ -111,9 +118,10 @@ substitution_conservative <- c("\\<[^<]*\\>", "")
 ```
 
 ### 1.6. Substitution in EDH dataset
+
 **Aim:** All  sustitutions following the pattern "A=B" will be cleaned thw following way: B remain in the text and the equal sign and A will be eliminated from the clean text.
 
-**!!!** Beware that by eliminating the brackets you may loose some information about the preservation of the text - use at your own discretion. The `substitution_edh_interpretive` should be run before `substitution_interpretive` script, otherwise the Regex pattern would not clean the text properly. The `substitution_interpretive` script will clean the angular brackets in the next step. 
+**!!!** Beware that by eliminating the brackets you may loose some information about the preservation of the text - use at your own discretion. The `substitution_edh_interpretive` should be run before `substitution_interpretive` block, otherwise the Regex pattern would not clean the text properly. The `substitution_interpretive` block will clean the angular brackets in the next step. 
 
 * Example before cleaning: ```pos<u=I>erunt bene merenti```
 * Example after cleaning: ```pos<I>erunt bene merenti```
@@ -123,12 +131,14 @@ substitution_edh_conservative <- c("([α-ωΑ-Ωa-zA-Z])=([α-ωΑ-Ωa-zA-Z])", 
 ```
 
 
-## 2. Building blocks for the interpretive model
-*The aim of this model is to produce a clean text that is enriched with editorial interpretations of the original text.*
+## 2. Cleaning blocks for the interpretive model
 
-The output of the interpretive model will produce an epigraphic text with as many editorial suggestions, restorations, corrections, and improvements as possible to provide as much possible contents of the inscription as possible. The brackets and non-utf compliant symbols will be eliminated.
+*The aim of this model is to produce a clean text that is enriched with interpretations of the original text as published by the editor of the corpus. The editorial interpretations include abbreviations, restorations, substitutions and suppresions of the text.*
+
+The output of the interpretive model will produce an epigraphic text with as many editorial suggestions, restorations, corrections, and improvements as possible to provide as much possible contents of the inscription as possible. The brackets and non-utf compliant symbols will be eliminated from the `interpretive model`.
 
 ### 2.1. Expanded abbreviations
+
 **Aim:** All parenthesis () will be eliminated from the clean text (substituted with ""), while the contents of the parenthesis will remain in the text.
 
 * Example before cleaning: ```Αὐρ(ήλιος) Οὐαλέριος```
@@ -139,9 +149,10 @@ expanded_abbreviations_interpretive <- c("[\\(*\\)]", "")
 ```
 
 ### 2.2. Suppresion of a text with superscripts
-**Aim:** Contents found within curly braces {} followed by one or more superscript digits will substitute the word immediately preceding the curly braces, see example.
 
-**!!!** It is crutial that block `3. Supression of a text` does not precede block `2. Supression of a text with superscripts`, otherwise the Regex pattern would not clean the text properly. This particular pattern is common for the PHI dataset and may  or may not appear in other datasets.
+**Aim:** Contents found within curly braces {} followed by one or more superscript digits will substitute the word immediately preceding the curly braces with the word contained in the curly braces and the braces will be eliminated, see example. Note: The cleaning block will not work if there is no text preceeding the curly braces (the pattern will be skipped). 
+
+**!!!** This particular pattern is common for the PHI dataset and may  or may not appear in other datasets. It is recommended to run the ```suppresion_keep_interpretive``` or ```suppresion_remove_interpretive``` block after ```suppresion_superscripts_interpretive``` block, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```ἱερεὺς ληφθὶς ὑπὰ {²⁶ὑπὸ}²⁶ τῶν βαρβάρων ```
 * Example after cleaning: ```ἱερεὺς ληφθὶς ὑπὸ τῶν βαρβάρων ```
@@ -149,13 +160,12 @@ expanded_abbreviations_interpretive <- c("[\\(*\\)]", "")
 ```{r}
 suppresion_superscripts_interpretive <- c(" [^ ]+ \\{([⁰¹²³⁴⁵⁶⁷⁸⁹]+)([^}]+)\\}\\1", " \\2")
 ```
-*Note:* the script will not work if there is no text preceeding the curly braces. To eliminate the curly braces with superscripts and the contents of the curly braces, use the ```suppresion_superscripts_conservative``` script. However, it is recommended to run the ```suppresion_superscripts_conservative``` script after ```suppresion_superscripts_interpretive``` script, otherwise the Regex pattern would not clean the text properly.
 
 ### 2.3. Suppresion of a text
 
 **Aim:** All curly braces {} will be eliminated from the clean text (substituted with ""), while the contents of the braces will remain in the text.
 
-**!!!** It is crutial that block `3. Supression of a text` does not precede block `2. Supression of a text with superscripts`, otherwise the Regex pattern would not clean the text properly. Due to ambiguous use of {} by editors of epigraphic corpora, the exact usage depends on the specific dataset and the way the curly braces were used. If you wish to keep the text within the brackets, use ```suppresion_keep_interpretive``` script and if you wish to remove the text in the brackets, use ```suppresion_remove_interpretive``` script.
+**!!!** It is crutial that block ```suppresion_keep_interpretive``` or ```suppresion_remove_interpretive``` does not precede block `suppresion_superscripts_interpretive`, otherwise the Regex pattern would not clean the text properly. Due to ambiguous use of {} by editors of epigraphic corpora, the exact usage depends on the specific dataset and the way the curly braces were used. Therefore, two options how to handle curly braces are provided: If you wish to keep the text within the curly braces and remove the braces, use ```suppresion_keep_interpretive``` block. If you wish to remove the text in the braces and the braces, use ```suppresion_remove_interpretive``` block.
 
 * Example before cleaning: ```θ̣εοῦ Σεβαστοῦ υἱοῦ {θ̣εοῦ Σεβαστοῦ} τύχης  ```
 * Example after cleaning (keep text): ```θ̣εοῦ Σεβαστοῦ υἱοῦ θ̣εοῦ Σεβαστοῦ τύχης```
@@ -164,13 +174,15 @@ suppresion_superscripts_interpretive <- c(" [^ ]+ \\{([⁰¹²³⁴⁵⁶⁷⁸�
 ```{r}
 suppresion_keep_interpretive <- c("[\\{*\\}]", "")
 ```
-OR
+
+OR if you wish to remove the contents of the braces
 
 ```{r}
 suppresion_remove_interpretive <- c("{[^}]*}", "")
 ```
 
 ### 2.4. Restoration
+
 **Aim:** All square brackets [] will be eliminated from the clean text (substituted with ""), while the contents of the brackets will remain in the text.
 
 **!!!** Beware that by eliminating the brackets you may loose some information about the preservation of the text - use at your own discretion.
@@ -183,6 +195,7 @@ restoration_interpretive <- c("[\\[*\\]]", "")
 ```
 
 ### 2.5. Substitution
+
 **Aim:** All angular brackets <> will be eliminated from the clean text (substituted with ""), while the contents of the brackets will remain in the text.
 
 **!!!** Beware that by eliminating the brackets you may loose some information about the preservation of the text - use at your own discretion.  
@@ -194,10 +207,11 @@ restoration_interpretive <- c("[\\[*\\]]", "")
 substitution_interpretive <- c("[\\<*\\>]", "")
 ```
 
-### 2.6. Substitution in EDH dataset
-**Aim:** All  sustitutions following the pattern "A=B" will be cleaned thw following way: A remain in the text and the equal sign and B will be eliminated from the clean text.
+### 2.6. Substitution in the EDH dataset
 
-**!!!** Beware that by eliminating the brackets you may loose some information about the preservation of the text - use at your own discretion. The `substitution_edh_interpretive` should be run before `substitution_interpretive` script, otherwise the Regex pattern would not clean the text properly. The `substitution_interpretive` script will clean the angular brackets in the next step.
+**Aim:** All  sustitutions following the pattern "A=B" will be cleaned the following way: "A" will remain in the text and the equal sign and "B" will be eliminated from the clean text.
+
+**!!!** The `substitution_edh_interpretive` should be run before `substitution_interpretive` block, otherwise the Regex pattern would not clean the text properly. The `substitution_interpretive` block will clean the angular brackets in the next step.
 
 * Example before cleaning: ```pos<u=I>erunt bene merenti```
 * Example after cleaning: ```pos<u>erunt bene merenti```
@@ -209,15 +223,15 @@ substitution_edh_interpretive <- c("([α-ωΑ-Ωa-zA-Z])=([α-ωΑ-Ωa-zA-Z])", 
 
 ## 3. The generic text cleaning
 
-*The aim of the generic cleaning is to strip the epigraphic text any non-utf compliant symbols and characters that do not adhere to the principles of a 'tidy text' analysis.*
+*The aim of the generic cleaning is to strip the epigraphic text any non-utf compliant symbols and characters that do not adhere to the principles of a quantitat ive text mining.*
 
-The final output of the cleaning depends on which of the individual cleaning blocks will be in the cleaning script. Each individual block represents one step of the cleaning process, and user can modify all the steps to recah the intended outcome. All the cleaning steps are dependent on the characteristics of the original dataset, therefore familiarity with the original dataset prior the cleaning process is recommended. Each dataset can have a different set of symbols and characters to be cleaned, thus, the cleaning blocks should be adjusted accordingly.
+The cleaning blocks in this section represent common patterns appearing in any epigraphic text, such as interpunction, lacunas or other representations of an empty space, various editorial notes and comments in the text itself, that are not relevant to the text mining, erasures, numerals, and several specific unicode symbols appearing in the original text. Depending on the characteristics of the originahal dataset and the intended outcome, anyone can change individial cleaning blocks to better fit their needs. Through testing is, however, strongly recommended! 
 
 ### 3.1. Lacuna 1
 
 **Aim:** All square brackets [] containing one or more "— " will be eliminated from the clean text (substituted with "").
 
-**!!!** The scipt ```lacuna1``` should be run before ```restoration_conservative``` and ```restoration_interpretive``` scripts, otherwise the Regex pattern would not clean the text properly.
+**!!!** The block ```lacuna1``` should be run before ```restoration_conservative``` and ```restoration_interpretive``` blocks, otherwise the Regex pattern would not clean the text properly. Note: If there is a text within the square bracket, e.g. ```προύχον[τος — — —]``` the block ```lacuna1``` will skip the pattern. However, the block ```restoration_interpretive``` will eliminate the square brackets, the script ```interpunction_symbols``` will clean the "—" and the script ```multi_whitespace``` will eliminate the extra whitespaces. Therefore the blocks should be used in combination and in the indicated sequence: (1)```restoration_interpretive```, (2)```interpunction_symbols``` and (3)```multi_whitespace```. 
 
 * Example before cleaning: ```[— — —]ης θεῷ Φοίβῳ```
 * Example after cleaning: ```ης θεῷ Φοίβῳ```
@@ -225,13 +239,12 @@ The final output of the cleaning depends on which of the individual cleaning blo
 ```{r}
 lacuna1 <- c("\\[[— ]+\\]", "")
 ```
-*Note:* If there is a text within the square bracket, e.g. ```προύχον[τος — — —]```, script ```restoration_interpretive``` will eliminate the square brackets, the script ```interpunction_symbols``` will clean the "—" and the script ```multi_whitespace``` will eliminate the extra whitespaces. Therefore the scripts ```restoration_interpretive```(1), ```interpunction_symbols```(2) and ```multi_whitespace```(3) should be used in combination and in the indicated sequence.
 
 ### 3.2. Lacuna 2
 
-**Aim:** All square brackets [] containing one or more ". " will be eliminated from the clean text (substituted with "").
+**Aim:** All square brackets [] containing one or more "." will be eliminated from the clean text (substituted with "").
 
-**!!!** The scipt ```lacuna1``` should be run before ```restoration_conservative``` and ```restoration_interpretive``` scripts, otherwise the Regex pattern would not clean the text properly.
+**!!!** The block ```lacuna2``` should be run before ```restoration_conservative``` and ```restoration_interpretive``` blocks, otherwise the Regex pattern would not clean the text properly. Note: If there is a text within the square bracket, e.g. ```προύχον[τος...]``` the block ```lacuna2``` will skip the pattern. However, the block ```restoration_interpretive``` will eliminate the square brackets, the script ```interpunction_symbols``` will clean the "." and the script ```multi_whitespace``` will eliminate the extra whitespaces. Therefore the blocks should be used in combination and in the indicated sequence: (1)```restoration_interpretive```, (2)```interpunction_symbols``` and (3)```multi_whitespace```.
 
 * Example before cleaning: ```[․․]ω Διὶ καὶ Ἥρᾳ```
 * Example after cleaning: ```ω Διὶ καὶ Ἥρᾳ```
@@ -239,12 +252,12 @@ lacuna1 <- c("\\[[— ]+\\]", "")
 ```{r}
 lacuna2 <- c("\\[[․]+\\]", "")
 ```
-*Note:* If there is a text within the square bracket, e.g. ```προύχον[τος — — —]```, script ```restoration_interpretive``` will eliminate the square brackets, the script ```interpunction_symbols``` will clean the "—" and the script ```multi_whitespace``` will eliminate the extra whitespaces. Therefore the scripts ```restoration_interpretive```(1), ```interpunction_symbols```(2) and ```multi_whitespace```(3) should be used in combination and in the indicated sequence.
 
 ### 3.3. Vacat
-**Aim:** All instances of the following strings "vacat, vac, vac., v." will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
 
-**!!!** If your datasets contains latin inscriptions, you may want to check whether the ```vacat``` script is not eliminitating more words than anticipated, e.g. words containing string "vacat" or "vac". If so, adjust the cleaning block accordingly, i.e. remove "vac", or don't use it.
+**Aim:** All instances of the following strings "vacat, vac, vac., v." will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` block in the following steps.
+
+**!!!** If your datasets contains latin inscriptions, you may want to check whether the ```vacat``` block is not eliminitating more words than anticipated, e.g. words containing string "vacat" or "vac". If so, adjust the cleaning block accordingly, i.e. remove "vac", or don't use it.
 
 * Example before cleaning: ```Ἡρακλείδα vacat χαῖρε.```
 * Example after cleaning: ```Ἡρακλείδα    χαῖρε.```
@@ -254,9 +267,10 @@ vacat <- c("(vacat|vac|vac\\.|v\\.)", " ")
 ```
 
 ### 3.4. Editorial notes
-**Aim:** All instances of the editorial strings in parenthesis such as (vel sim.) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
 
-**!!!** The ```editorial_notes``` script should run before the ```expanded_abbreviations_conservative``` and ```expanded_abbreviations_interpretive``` scripts, otherwise the Regex pattern would not clean the text properly.
+**Aim:** All instances of the editorial notes in parenthesis such as (vel sim.) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` block in the following steps.
+
+**!!!** The ```editorial_notes``` block should run before the ```expanded_abbreviations_conservative``` and ```expanded_abbreviations_interpretive``` blocks, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```Ἥρωι (vel sim.) Καλλισθένης```
 * Example after cleaning: ``Ἥρωι   Καλλισθένης```
@@ -266,6 +280,7 @@ editorial_notes <-c("\\(vel sim.\\)", " ")
 ```
 
 ### 3.5. New line
+
 **Aim:** All instances of in-line symbol for new line (|) will be eliminated (substituted with "").
 
 * Example before cleaning: ```Λάμπρη Τ̣ελεσήνορ|ος γυνή.```
@@ -274,7 +289,9 @@ editorial_notes <-c("\\(vel sim.\\)", " ")
 ```{r}
 new_line <- c("[\\||\\/]", "")
 ```
+
 ### 3.6. Split word over two lines
+
 **Aim:** All instances of words split between two lines with a dash (-) will be eliminated (substituted with "").
 
 * Example before cleaning: ```ἀρχιερέως καὶ εὐποσιάρ-\nχου μηνὸς```
@@ -283,8 +300,10 @@ new_line <- c("[\\||\\/]", "")
 ```{r}
 split_word_multiline <- c("-\\n", "")
 ```
+
 ### 3.7. Erasure empty
-**Aim:** All instances of erased text (〚—〛) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
+
+**Aim:** All instances of erased text (〚—〛) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` block in the following steps.
 
 * Example before cleaning: ```Ἀρτέμιδι 〚— — —〛 ἐπηκόοις.```
 * Example after cleaning: ```Ἀρτέμιδι  ἐπηκόοις.```
@@ -292,7 +311,9 @@ split_word_multiline <- c("-\\n", "")
 ```{r}
 erasure_empty <- c("〚[— ]+〛", " ")
 ```
+
 ### 3.8. Erasure with new text
+
 **Aim:** All instances of double brackets for erasures (〚 〛) will be eliminated (substituted with "") and the contents of the double brackets will be preserved as part of the clean text.
 
 * Example before cleaning: ```Ἀμύντωρ Νουμηνίου 〚χαῖρε〛. καὶ ἡ γυνὴ αὐτοῦ```
@@ -301,10 +322,12 @@ erasure_empty <- c("〚[— ]+〛", " ")
 ```{r}
 erasure_new_text <- c("[〚〛]", "")
 ```
+
 ### 3.9. Dubious dot subscript
+
 **Aim:** All instances of the dubious reading marked by the subscrit dot (unicode 0323) will be eliminated (substituted with "").
 
-**!!!** The ```dubious_dot_subscript``` script should happen as first step of the cleaning, otherwise the letters might shift and the Regex pattern would not clean the text properly.
+**!!!** The ```dubious_dot_subscript``` block should happen as first step of the cleaning, otherwise the letters might shift and the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ``` Ἀ̣πό̣λ̣λ̣ωνος```
 * Example after cleaning: ``` Ἀπόλλωνος```
@@ -312,30 +335,33 @@ erasure_new_text <- c("[〚〛]", "")
 ```{r}
 dubious_dot_subscript <- c("\u{0323}", "")
 ```
+
 ### 3.10. Interpunction symbols
-**Aim:** All instances of listed interpunction symbols (,.!-—#%^&\*/~:;) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` script in the following steps.
 
-!!! If you wish to keep sentence separators, such as dots at the bottom of the line, use ```interpunction_keep_sentences``` or elimininate the sentence separators you want to keep in your text from the cleaning block ```interpunction_keep_sentences```.
+**Aim:** All instances of listed interpunction symbols (,.!-—#%^&\*/~:;) will be replaced by a space (substituted with " "). If there is any extra whitespace, it will be cleaned by ```multi_whitespace``` block in the following steps.
 
-* Example before cleaning: ```Φιλήτη # θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς· /ἀγὼν```
+**!!!** If you wish to keep sentence separators, such as dots at the bottom of the line, use ```interpunction_keep_sentences``` or elimininate the sentence separators you want to keep in your text from the cleaning block ```interpunction_keep_sentences```.
+
+* Example before cleaning: ```Φιλήτη # θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς. /ἀγὼν```
 * Example after cleaning: ```Φιλήτη  θεᾷ Μαλοφόρῳ``` or ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς   ἀγὼν```
+* Example after cleaning (keep sentences): ```κεῖμαι πρόμοιρος Ἑρμογένης τυμβευθείς.  ἀγὼν```
 
 ```{r}
-interpunction_symbols <- c("[,|\\.|․|·|!|\\-|—|–|#|%|\\^|&|\\*|~|:|;|@]", " ")
+interpunction_symbols <- c("[,|\\.|․|:|⋮|⁙|;|!|\\-|—|–|#|%|\\^|&|\\*|~|@]", " ")
 ```
 OR
 
 if you wish to preserve sentence separators, such as dots
 
 ```{r}
-interpunction_keep_sentences <- c("[,|․|·|!|\\-|—|–|#|%|\\^|&|\\*|~|:|;|@]", " ")
+interpunction_keep_sentences <- c("[!|\\-|—|–|#|%|\\^|&|\\*|~|@]", " ")
 ```
 
 ### 3.11. Superscript numbers
+
 **Aim:** All instances of superscripted numbers will be eliminated (substituted with "").
 
-**!!!** The ```superscript_numbers``` should not be run before the ```suppresion_superscripts_conservative``` or ```suppresion_superscripts_interpretive``` script, otherwise the Regex pattern would not clean the text properly.
-
+**!!!** The ```superscript_numbers``` should not be run before the ```suppresion_superscripts_conservative``` or ```suppresion_superscripts_interpretive``` block, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```Αὐρ(ήλιος) Διονύσιος #⁵⁶ βʹ #⁵⁶```
 * Example after cleaning: ```Αὐρ(ήλιος) Διονύσιος # βʹ #```
@@ -343,6 +369,7 @@ interpunction_keep_sentences <- c("[,|․|·|!|\\-|—|–|#|%|\\^|&|\\*|~|:|;|@
 ```{r}
 superscript_numbers <- c("[⁰¹²³⁴⁵⁶⁷⁸⁹]+", "")
 ```
+
 ### 3.12. Epigraphic symbols
 
 **Aim:** All instances of the listed specialised epigraphic symbols, such as the haedera (❦), will be eliminated (substituted with "").
@@ -351,18 +378,22 @@ superscript_numbers <- c("[⁰¹²³⁴⁵⁶⁷⁸⁹]+", "")
 * Example after cleaning: ```ἀγαθῆι   τύχηι```
 
 ```{r}
-epigraphic_symbols <-c ("[❦|∙|𐆖|⏑|⏓|⏕]", "")
+epigraphic_symbols <-c ("[❦|·|∙|𐆖|⏑|⏓|⏕]", "")
 ```
+
 ### 3.13. Uncertainty symbols
+
 **Aim:** All instances of th elisted symbols marking uncertainty (?) will be eliminated (substituted with "").
 
 * Example before cleaning: ```χαῖρε?```
 * Example after cleaning: ```χαῖρε```
 
 ```{r}
-uncertainty_symbols <-c ("[?]", "")
+uncertainty_symbols <-c ("[\\?]", "")
 ```
+
 ### 3.14. End of line
+
 **Aim:** All instances of end of line symbol (\n) will be replaced by space (substituted with " ").
 
 * Example before cleaning: ```καὶ ἄρξαντα\nτοῦ κοινοῦ```
@@ -373,16 +404,18 @@ end_line <- c("\\n", " ")
 ```
 
 ### 3.15. Extra blank space
-**Aim:** All instances of extra blank space ("  ") will be replaced by space (substituted with " ").
+
+**Aim:** All instances of extra blank space (" ") will be replaced by space (substituted with " ").
 
 * Example before cleaning: ```ἀγαθῆι   τύχηι.```
-* Example after cleaning: ```ἀγαθῆι τύχηι.```
+* Example after cleaning: ```ἀγαθῆι   τύχηι.```
 
 ```{r}
 extra_blank <- c("[ ]+", " ")
 ```
 
 ### 3.16. Multi-whitespace
+
 **Aim:** All instances of more then one whitespace "  " next to each other will be eliminated (substituted with "").
 
 **!!!** The ```multi_whitespace``` should run as the second last cleaning block to ensure all redundant white spaces are cleaned from the text.
@@ -392,8 +425,8 @@ extra_blank <- c("[ ]+", " ")
 
 ```{r}
 multi_whitespace <- c("\\s+", " ")
-
 ```
+
 ### 3.17. Trailing and leading whitespace
 
 **Aim:** All instances of whitespace " " at the beginning and end of the line will be eliminated (substituted with "").
@@ -411,7 +444,7 @@ whitespace_endline <- c("(^\\s|\\s$)", "")
 
 **Aim:** All instances of editorial comments in Latin alphabet that are enclosed in curly braces {} with superscript numbers will be eliminated (substituted with "").
 
-**!!!** If your dataset contains Latin inscriptions, use this script with caution. Verify first, that running the script it does not eliminate any necessary information or text. This block has been specifically designed for the interpretive cleaning of the PHI Greek Inscription dataset and it should run before ```suppresion_superscripts_interpretive``` and ```suppresion_interpretive``` scripts, otherwise the Regex pattern would not clean the text properly.
+**!!!** If your dataset contains Latin inscriptions, use this block with caution. Verify first, that running the block  does not eliminate any necessary information or text. This block has been specifically designed for the interpretive cleaning of the PHI Greek Inscription dataset and it should run before ```suppresion_superscripts_interpretive``` and ```suppresion_interpretive``` blocks, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```ἀγαθῆι τύχηι. {²in parte inferiore altera manu incisa est:}² ὑπὲρ τῆς τοῦ```
 * Example after cleaning: ```ἀγαθῆι τύχηι. ὑπὲρ τῆς τοῦ```
@@ -424,7 +457,7 @@ editorial_comments_latin <- c("\\{([⁰¹²³⁴⁵⁶⁷⁸⁹]+)([a-zA-Z0-9][^
 
 **Aim:** All instances of arabic numerals (0-9) will be eliminated (substituted with "").
 
-**!!!** If your dataset contains arabic numerals that you would like to keep, use this script with caution. Verify first, that running the script it does not eliminate any necessary information or text. This block has been specifically designed for the interpretive cleaning of the PHI Greek Inscription dataset and it should run before ```multi_whitespace``` and ```whitespace_endline``` scripts, otherwise the Regex pattern would not clean the text properly.
+**!!!** If your dataset contains arabic numerals that you would like to keep, use this block with caution. Verify first, that running the block does not eliminate any necessary information or text. This block has been specifically designed for the interpretive cleaning of the PHI Greek Inscription dataset and it should run before ```multi_whitespace``` and ```whitespace_endline``` blocks, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```ἡ γυνὴ αὐτοῦ ΦιλΙ̣ 4 5 καὶ```
 * Example after cleaning: ```ἡ γυνὴ αὐτοῦ ΦιλΙ καὶ```
@@ -437,7 +470,7 @@ arabic_numerals <- c("[0-9]+", "")
 
 **Aim:** All instances of unclosed brackets will be eliminated (substituted with "").
 
-**!!!** Use the `unclosed_brackets` script immediately before ```multi_whitespace``` and ```whitespace_endline``` scripts, otherwise the Regex pattern would not clean the text properly.
+**!!!** Use the `unclosed_brackets` block immediately before ```multi_whitespace``` and ```whitespace_endline``` blocks, otherwise the Regex pattern would not clean the text properly.
 
 * Example before cleaning: ```ummio isenna Xv [```
 * Example after cleaning: ```ummio isenna Xv ```
@@ -446,13 +479,14 @@ arabic_numerals <- c("[0-9]+", "")
 unclosed_brackets <- c("[\\[|\\{|\\(|\\)|\\}|\\]]", "")
 ```
 
+
 ---
 
 # Building cleaning functions for specific datasets
 
 When we have established the individual buidling blocks, we can put them together in the right sequence and build a cleaning function in R for conservative and interpretive models.
 
-## PHI Greek Inscriptions dataset
+## 1. PHI Greek Inscriptions dataset
 Source: https://epigraphy.packhum.org/
 
 ### Loading data
@@ -669,11 +703,9 @@ example_interpretive_sentence <- as.data.frame(cleaning_interpretive_sentence_ph
 example_interpretive_sentence[42,]
 ```
 
-
 ### Saving all three versions of the cleaned text in a CSV
 
 Save the output of ```cleaning_conservative``` and ```cleaning_interpretive_word``` and ```cleaning_interpretive_sentence``` function together with the original contents of the dataset.
-Create a new directory ```outputs``` in the root folder if it does not exist.
 
 ```{r}
 clean_text <- text %>%
@@ -682,13 +714,13 @@ clean_text <- text %>%
   mutate(clean_text_interpretive_sentence = cleaning_interpretive_sentence_phi(text$data))
 ```
 
-
+Create a new directory ```outputs``` in the root folder if it does not exist and save it as CSV.
 ```{r}
 # dir.create("../../outputs")
 write_csv(clean_text, path = "../../outputs/PHI_IGBulg-I_clean_text.csv")
 ```
 
-## EDH Inscriptions dataset
+## 2. EDH Inscriptions dataset
 Source: https://edh-www.adw.uni-heidelberg.de/
 
 ### Loading data
@@ -877,7 +909,7 @@ print(EDH_tibble$transcription[c(2297, 2444, 3026)])
 print(EDH_tibble$text_cleaned[c(2297, 2444, 3026)])
 ```
 
-Output of the ```cleaning_interpretive_sentence_edh``` function:
+Output of the ```cleaning_interpretive_sentence_edh``` function (with interpunction):
 ```{r}
 example_edh3 <- as.data.frame(cleaning_interpretive_sentence_edh(EDH_tibble$transcription))
 example_edh3[c(2297, 2444, 3026),]
