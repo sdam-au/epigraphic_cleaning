@@ -2,7 +2,7 @@
 title: "Tidy text for EDH Inscriptions"
 author: "Petra Hermankova"
 date: "07/05/2020"
-output: html_document
+output: rmarkdown::github_document
 ---
 
 

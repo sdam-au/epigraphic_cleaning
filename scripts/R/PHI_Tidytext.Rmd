@@ -2,7 +2,7 @@
 title: "Tidy text for PHI Greek Inscriptions"
 author: "Petra Hermankova"
 date: "07/05/2020"
-output: html_document
+output: rmarkdown::github_document
 ---
 *Initial setup*
 ```{r setup, echo=TRUE, message=FALSE}
