@@ -3,10 +3,7 @@ title: "Epigraphic cleaning models"
 author: "Petra Hermankova"
 date: "05/05/2020"
 output: rmarkdown::github_document
-  html_document:
-    theme: cerulean
-    toc: yes
-    toc_depth: 3
+  
 ---
 *Setting up the environment*
 ```{r setup, echo=TRUE, message=FALSE}
@@ -16,6 +13,7 @@ devtools::install_github("mplex/cedhar", subdir="pkg/sdam")
 #install.packages("tidyverse")
 #install.packages("getPass")
 #install.packages("formatR")
+#install.packages("rmarkdown")
 
 library(tidyverse)
 library(tidytext)
